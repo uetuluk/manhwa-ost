@@ -19,7 +19,7 @@ Phase 0 — feasibility spikes. Nothing here is a working reader yet.
 | Y3 instrumental route (no vocals) | **pass (pending listen)** — LoRA, 46 s cue in 31 s |
 | Y4 semantic-prefix cue continuity | **pass** — 50/50 frames identical |
 | B1 storyboard → cue-sheet JSON | **pass** — 3/3 valid, 52–92 s |
-| R1 source fetch → browser reader | in progress |
+| R1 source fetch → browser reader | **pass** — MangaDex → reader → composed chapter |
 
 Measurements: [`docs/spikes-2026-10-26.md`](docs/spikes-2026-10-26.md).
 
@@ -36,6 +36,21 @@ tools/               bootstrap, engine build, benchmarks
 
 Heavy artefacts (engine sources, builds, audio library) live on `/srv/manhwa-ost`,
 not in the repo. See `tools/env.sh`.
+
+## Run it
+
+```bash
+tools/run-composer.sh                 # API on 127.0.0.1:8765
+npm --prefix apps/web-reader run dev  # reader on 127.0.0.1:5173
+```
+
+Open <http://127.0.0.1:5173>, pick MangaDex, open a series, open a chapter, press
+**Compose OST** (≈90 s for a 20-page chapter: ~60 s reading the pages, ~30 s
+composing five cues). Then press **Enable OST** and scroll; cues change at the
+AI's section boundaries.
+
+Deep links: `#/m/<mangaId>` for a series, `#/c/<mangaId>/<chapterId>` for a
+chapter.
 
 ## Engine
 
