@@ -1,0 +1,14 @@
+X:1
+T:Ashen Crown - Main Theme
+M:2/4
+L:1/32
+Q:1/4=92
+V: Ins clef=treble name="Inst." snm="Inst."
+K:Dm
+% motif A - the crown theme
+"Dm"D8F4A4F4D4|"Dm"A8F4D4A,8|"Bb"B8D4F4D4B,4|"A"A8C4E4G4A4|
+"Dm"D8F4A4d4A4|"Dm"F8A4F4D8|"Bb"G8F4E4D4C4|"A"D8C4A,4D8|
+% motif A' - sequence up a step, same contour
+"Gm"G8B4d4B4G4|"Gm"d8B4G4D8|"Eb"E8G4B4G4E4|"D"D8F4A4d4A4|
+% motif B - the ash motif, falling
+"Bb"F4E4D4C4B,4A,4|"C"C4D4E4F4G4A4|"Dm"A8F4D4A,4D4|"Dm"D16|

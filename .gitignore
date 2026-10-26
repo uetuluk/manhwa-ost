@@ -1,0 +1,15 @@
+# heavy artefacts live on /srv/manhwa-ost
+.tools/
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+dist/
+build/
+*.wav
+*.flac
+*.opus
+*.mp3
+*.log
+.env
+.DS_Store

@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "chapter": { "number": "154", "title": null, "page_count": 14 },
+  "sections": [
+    {
+      "index": 1,
+      "start_page": 1,
+      "end_page": 3,
+      "label": "Golden Sovereign's ultimatum in the tower",
+      "summary": "Inside the glowing tower, the Golden Sovereign tells the assembled sovereigns that Death Sovereign has declared opposition and asks each of them to surrender or stand against her.",
+      "mood": ["tense", "dread"],
+      "energy": 0.35,
+      "tension": 0.8,
+      "motif": "main",
+      "arrangement": "low string pedal, distant boy's choir, glassy bells, sparse taiko, wide hall reverb, mid register",
+      "transition_in": "cut"
+    },
+    {
+      "index": 2,
+      "start_page": 4,
+      "end_page": 5,
+      "label": "Is this betrayal? The old oath",
+      "summary": "The sovereigns recoil at the demand, and a night-time flashback recalls the vow they made after clearing the 27th floor with Death Sovereign never to be enemies again.",
+      "mood": ["tense", "grief"],
+      "energy": 0.2,
+      "tension": 0.65,
+      "motif": "grief",
+      "arrangement": "solo cello elegy, muted piano, airy pad, thin high harmonics over low drone, sparse density",
+      "transition_in": "cut"
+    },
+    {
+      "index": 3,
+      "start_page": 6,
+      "end_page": 7,
+      "label": "Six sovereigns refuse: war of words",
+      "summary": "Each sovereign calmly explains why the promise no longer binds them and refuses to surrender, trading barbs with the Golden Sovereign until she notes it is six against one.",
+      "mood": ["tense", "comic"],
+      "energy": 0.3,
+      "tension": 0.7,
+      "motif": "main",
+      "arrangement": "pizzicato strings, clarinet and bassoon jabs, light snare, harpsichord plucks, dry mid register",
+      "transition_in": "cut"
+    },
+    {
+      "index": 4,
+      "start_page": 8,
+      "end_page": 8,
+      "label": "Death Sovereign's lonely resolve",
+      "summary": "Kim Gong-ja looks over the city and goblin residents he built, weighing near-zero odds of victory and what losing hope would cost them, while the others wait on his word.",
+      "mood": ["grief", "dread"],
+      "energy": 0.15,
+      "tension": 0.75,
+      "motif": "grief",
+      "arrangement": "solo piano, low contrabass drone, faint wordless choir, vast empty space, low register",
+      "transition_in": "crossfade"
+    },
+    {
+      "index": 5,
+      "start_page": 9,
+      "end_page": 10,
+      "label": "Divine Messages and 4,000 days of regression",
+      "summary": "In a cave he buys out the shop's Divine Messages one after another, and the flashbacks reveal the truth: every death returned him 24 hours and let him send those messages into goblin dreams.",
+      "mood": ["mystery", "wonder"],
+      "energy": 0.35,
+      "tension": 0.55,
+      "motif": "ash",
+      "arrangement": "glitchy synth arpeggio, ticking pulses, warm piano motif, system chimes, growing mid-high density",
+      "transition_in": "swell"
+    },
+    {
+      "index": 6,
+      "start_page": 11,
+      "end_page": 12,
+      "label": "The White Lion speaks to the goblins",
+      "summary": "He spends every message to speak the same words into the goblin children's dreams, and the shaman, weeping, realizes the White Lion has spoken to them through the pot and butterfly.",
+      "mood": ["wonder", "grief"],
+      "energy": 0.3,
+      "tension": 0.45,
+      "motif": "wonder",
+      "arrangement": "warm flute and celesta, soft choir swell, harp, hand percussion, gentle lift, mid register",
+      "transition_in": "swell"
+    },
+    {
+      "index": 7,
+      "start_page": 13,
+      "end_page": 14,
+      "label": "Goblins rise — the White Lion returns",
+      "summary": "Red power floods the cave as the goblins cry that the White Lion has returned to their side, and they surge up in a chanting, blade-waving swarm behind Kim Gong-ja.",
+      "mood": ["battle", "triumph", "dread"],
+      "energy": 0.8,
+      "tension": 0.85,
+      "motif": "battle",
+      "arrangement": "taiko and frame drums, low brass stabs, chanting male choir, distorted strings, dense low-mid crunch",
+      "transition_in": "cut"
+    }
+  ]
+}
