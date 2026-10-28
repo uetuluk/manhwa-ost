@@ -25,6 +25,7 @@ export function Reader({ manga, chapter, onBack }: Props) {
   const tops = useRef<number[]>([]);
   const heights = useRef<number[]>([]);
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const pagesRef = useRef<HTMLDivElement | null>(null);
   const sectionRef = useRef<Section | null>(null);
   const timelineRef = useRef<Timeline | null>(null);
   const ostOnRef = useRef(false);
@@ -118,34 +119,59 @@ export function Reader({ manga, chapter, onBack }: Props) {
     [],
   );
 
-  // scroll → page → section
+  // page under the probe line → progress → section
+  const sync = useCallback(() => {
+    const t = tops.current;
+    if (!t.length) return;
+    // Images report zero height until they decode; a probe against zeroed
+    // offsets would claim the last page. Wait for real layout.
+    if (t[t.length - 1] === 0) return;
+    const probe = window.scrollY + window.innerHeight * HEAD_PROBE;
+    let i = 0;
+    while (i + 1 < t.length && t[i + 1] <= probe) i++;
+    const h = heights.current[i] || 1;
+    const frac = Math.max(0, Math.min(1, (probe - t[i]) / h));
+    const page = Math.min(t.length, i + 1);
+    setProgress((i + frac) / t.length);
+
+    const tl = timelineRef.current;
+    if (!tl) return;
+    const idx = tl.sections.findIndex((s) => page >= s.start_page && page <= s.end_page);
+    if (idx >= 0) applySection(tl.sections[idx], idx, frac);
+  }, [applySection]);
+
   useEffect(() => {
     let raf = 0;
     const onScroll = () => {
       if (raf) return;
       raf = window.requestAnimationFrame(() => {
         raf = 0;
-        const probe = window.scrollY + window.innerHeight * HEAD_PROBE;
-        const t = tops.current;
-        let i = 0;
-        while (i + 1 < t.length && t[i + 1] <= probe) i++;
-        if (!t.length) return;
-        const h = heights.current[i] || 1;
-        const frac = Math.max(0, Math.min(1, (probe - t[i]) / h));
-        const page = Math.min(t.length, i + 1);
-        setProgress((i + frac) / t.length);
-
-        const tl = timelineRef.current;
-        if (!tl) return;
-        const idx = tl.sections.findIndex((s) => page >= s.start_page && page <= s.end_page);
-        if (idx >= 0) applySection(tl.sections[idx], idx, frac);
+        sync();
       });
-      window.requestAnimationFrame(() => {});
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
+    sync();
     return () => window.removeEventListener("scroll", onScroll);
-  }, [pages, applySection]);
+  }, [pages, sync]);
+
+  // Re-measure and re-sync when images finish decoding (and on any reflow).
+  useEffect(() => {
+    const el = pagesRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      measure();
+      sync();
+    });
+    ro.observe(el);
+    const t = window.setTimeout(() => {
+      measure();
+      sync();
+    }, 400);
+    return () => {
+      ro.disconnect();
+      window.clearTimeout(t);
+    };
+  }, [pages, measure, sync]);
 
   const toggleOst = async () => {
     if (ostOn) {
@@ -240,7 +266,7 @@ export function Reader({ manga, chapter, onBack }: Props) {
         </div>
       )}
 
-      <div className="pages">
+      <div className="pages" ref={pagesRef}>
         {pages.map((src, i) => {
           const marker = timeline?.sections.find((s) => s.start_page === i + 1);
           return (
