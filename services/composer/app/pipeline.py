@@ -27,11 +27,15 @@ def _downscale(pages: list[Path], dest: Path) -> list[Path]:
     return out
 
 
-def _pick_storyboard(pages: list[Path], limit: int = MAX_BRAIN_PAGES) -> list[Path]:
+def _pick_storyboard(pages: list[Path], limit: int = MAX_BRAIN_PAGES) -> list[tuple[int, Path]]:
+    """Evenly spaced sample of pages, with their real 1-based page numbers."""
     if len(pages) <= limit:
-        return pages
+        return list(enumerate(pages, start=1))
     step = len(pages) / limit
-    return [pages[min(len(pages) - 1, int(i * step))] for i in range(limit)]
+    return [
+        (min(len(pages), int(i * step) + 1), pages[min(len(pages) - 1, int(i * step))])
+        for i in range(limit)
+    ]
 
 
 @jobs.runner("compose")
@@ -61,13 +65,15 @@ def compose(job: jobs.Job) -> dict:
         return existing
 
     jobs.update(job.id, progress=0.15, step="reading the chapter")
-    board = _downscale(_pick_storyboard(pages), chapter / "storyboard")
+    board = _pick_storyboard(pages)
+    images = _downscale([p for _, p in board], chapter / "storyboard")
     score = brain.score_chapter(
-        board,
+        images,
         series_title=series_title,
         chapter_number=chapter_number,
         chapter_title=chapter_title,
         page_count=page_count,
+        page_numbers=[n for n, _ in board],
     )
     storage.write_json(chapter / "analysis.json", score)
     storage.save_score(source, manga_id, chapter_id, score)
@@ -118,14 +124,16 @@ def analyze_only(job: jobs.Job) -> dict:
     urls, _ = asyncio.run(mangadex.page_urls(chapter_id))
     pages_dir = storage.reset_pages(source, manga_id, chapter_id)
     pages = asyncio.run(mangadex.download_pages(urls, pages_dir, cache_dir=config.CACHE_DIR / "img"))
-    board = _downscale(_pick_storyboard(pages), chapter / "storyboard")
+    board = _pick_storyboard(pages)
+    images = _downscale([p for _, p in board], chapter / "storyboard")
     jobs.update(job.id, progress=0.3, step="reading the chapter")
     score = brain.score_chapter(
-        board,
+        images,
         series_title=ref.get("series_title") or "Untitled",
         chapter_number=str(ref.get("chapter_number") or "?"),
         chapter_title=ref.get("chapter_title"),
         page_count=len(pages),
+        page_numbers=[n for n, _ in board],
     )
     storage.write_json(chapter / "analysis.json", score)
     storage.save_score(source, manga_id, chapter_id, score)

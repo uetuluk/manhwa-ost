@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import hashlib
 import json
-import math
 import subprocess
 from pathlib import Path
 
@@ -111,10 +111,14 @@ def loop_points(duration: float, energy: float) -> dict:
 
 def build_cue(spec: dict, cue_dir: Path, *, series_title: str, abc: Path) -> dict:
     cue_dir.mkdir(parents=True, exist_ok=True)
-    wav = cue_dir / f"{spec['cue_id']}.wav"
-    opus = cue_dir / f"{spec['cue_id']}.opus"
+    # The arrangement is part of the identity: the same motif+energy in a
+    # different arrangement is a different cue and must not reuse the audio.
+    tag = hashlib.sha1(spec["style"].encode()).hexdigest()[:6]
+    stem = f"{spec['cue_id']}-{tag}"
+    wav = cue_dir / f"{stem}.wav"
+    opus = cue_dir / f"{stem}.opus"
     if not wav.exists():
-        render_cue(spec, wav, series_title=series_title, abc=abc, log_path=cue_dir / f"{spec['cue_id']}.log")
+        render_cue(spec, wav, series_title=series_title, abc=abc, log_path=cue_dir / f"{stem}.log")
     if not opus.exists():
         to_opus(wav, opus)
     fp = analyze(wav)

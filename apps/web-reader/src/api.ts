@@ -14,8 +14,8 @@ export const api = {
   search: (q: string) => json<Manga[]>(`/api/mangadex/search?q=${encodeURIComponent(q)}`),
   manga: (id: string) => json<Manga>(`/api/mangadex/manga/${id}`),
   chapters: (id: string) => json<Chapter[]>(`/api/mangadex/manga/${id}/chapters`),
-  pages: (chapterId: string) =>
-    json<{ page_count: number; pages: string[] }>(`/api/mangadex/chapter/${chapterId}/pages`),
+  pages: (mangaId: string, chapterId: string) =>
+    json<{ page_count: number; pages: string[] }>(`/api/pages/${mangaId}/${chapterId}`),
   score: (mangaId: string, chapterId: string) =>
     json<Timeline>(`/api/score/mangadex/${mangaId}/${chapterId}`),
   compose: (body: Record<string, unknown>) =>

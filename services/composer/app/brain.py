@@ -10,7 +10,9 @@ from . import config
 
 PROMPT = """You are scoring a manhwa chapter for a reader that plays a continuous soundtrack.
 
-You are given pages 1..{page_count} of chapter {chapter_number}{chapter_title} of "{series_title}" as images, in order.
+You are given {image_count} images from chapter {chapter_number}{chapter_title} of "{series_title}", in reading order. They are these pages of the chapter's {page_count} pages: {page_list}.
+
+The chapter has {page_count} pages in total; you are seeing a sample. Infer section boundaries from what the pages show and place them on the real page numbers.
 
 Split the chapter into 3 to 8 narrative SECTIONS. A section is a beat of the scene: it starts when the dramatic situation changes (new location, new intent, escalation, reveal, aftermath). Do not split more often than the art actually changes; do not merge an entire chapter into one beat.
 
@@ -118,12 +120,15 @@ def score_chapter(
     chapter_number: str,
     chapter_title: str | None,
     page_count: int,
+    page_numbers: list[int] | None = None,
     motifs: list[str] | None = None,
     timeout: int = 240,
 ) -> dict:
     schema = json.loads(config.SCORE_SCHEMA.read_text())
     prompt = PROMPT.format(
         page_count=page_count,
+        image_count=len(images),
+        page_list=", ".join(str(p) for p in (page_numbers or range(1, len(images) + 1))),
         chapter_number=chapter_number,
         chapter_title=f' "{chapter_title}"' if chapter_title else "",
         chapter_title_json=json.dumps(chapter_title),

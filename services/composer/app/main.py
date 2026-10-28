@@ -86,6 +86,35 @@ async def chapters(manga_id: str) -> list[dict]:
     return rows
 
 
+@app.get("/api/pages/{manga_id}/{chapter_id}")
+async def local_pages(manga_id: str, chapter_id: str) -> dict:
+    """Pages for reading: downloaded once, then served from disk.
+
+    MangaDex at-home URLs are short-lived and node-specific, so reading must not
+    depend on them — only composing does.
+    """
+    pages_dir = storage.chapter_dir("mangadex", manga_id, chapter_id) / "pages"
+    files = sorted(pages_dir.glob("*.jpg"))
+    if not files:
+        urls, _ = await mangadex.page_urls(chapter_id)
+        await mangadex.download_pages(urls, pages_dir, cache_dir=config.CACHE_DIR / "img")
+        files = sorted(pages_dir.glob("*.jpg"))
+    if not files:
+        raise HTTPException(status_code=404, detail="chapter has no pages")
+    return {
+        "page_count": len(files),
+        "pages": [f"/api/page/mangadex/{manga_id}/{chapter_id}/{i + 1}" for i in range(len(files))],
+    }
+
+
+@app.get("/api/page/{source}/{manga_id}/{chapter_id}/{index}")
+def page_file(source: str, manga_id: str, chapter_id: str, index: int) -> FileResponse:
+    path = storage.chapter_dir(source, manga_id, chapter_id) / "pages" / f"{index:03d}.jpg"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="page not found")
+    return FileResponse(path, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"})
+
+
 @app.get("/api/mangadex/chapter/{chapter_id}/pages")
 async def chapter_pages(chapter_id: str, refresh: bool = False) -> dict:
     now = time.time()

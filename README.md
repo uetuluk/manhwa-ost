@@ -50,7 +50,9 @@ composing five cues). Then press **Enable OST** and scroll; cues change at the
 AI's section boundaries.
 
 Deep links: `#/m/<mangaId>` for a series, `#/c/<mangaId>/<chapterId>` for a
-chapter.
+chapter. `tools/dev-up.sh` starts both services idempotently.
+
+Pipeline detail and current limits: [`docs/pipeline.md`](docs/pipeline.md).
 
 ## Engine
 

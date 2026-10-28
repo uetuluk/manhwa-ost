@@ -42,7 +42,7 @@ export function Reader({ manga, chapter, onBack }: Props) {
   useEffect(() => {
     let cancelled = false;
     api
-      .pages(chapter.id)
+      .pages(manga.id, chapter.id)
       .then((d) => !cancelled && setPages(d.pages))
       .catch((e) => setError(String(e)));
     api
@@ -241,17 +241,30 @@ export function Reader({ manga, chapter, onBack }: Props) {
       )}
 
       <div className="pages">
-        {pages.map((src, i) => (
-          <div
-            className="page"
-            key={src}
-            ref={(el) => {
-              pageRefs.current[i] = el;
-            }}
-          >
-            <img src={src} alt={`page ${i + 1}`} loading={i < 3 ? "eager" : "lazy"} decoding="async" />
-          </div>
-        ))}
+        {pages.map((src, i) => {
+          const marker = timeline?.sections.find((s) => s.start_page === i + 1);
+          return (
+            <div key={src}>
+              {marker && (
+                <div className={`section-marker ${current?.index === marker.index ? "active" : ""}`}>
+                  <span className="sm-index">§{marker.index}</span>
+                  <span className="sm-label">{marker.label}</span>
+                  <span className="sm-meta">
+                    {marker.motif} · {marker.mood.join("/")} · e{marker.energy.toFixed(2)}
+                  </span>
+                </div>
+              )}
+              <div
+                className="page"
+                ref={(el) => {
+                  pageRefs.current[i] = el;
+                }}
+              >
+                <img src={src} alt={`page ${i + 1}`} loading={i < 3 ? "eager" : "lazy"} decoding="async" />
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {timeline && (
