@@ -66,6 +66,11 @@ async def popular(limit: int = 18, original_language: str | None = "ko") -> list
     return await mangadex.popular(limit=limit, original_language=original_language)
 
 
+@app.get("/api/mangadex/latest")
+async def latest(limit: int = 24) -> list[dict]:
+    return await mangadex.latest(limit=limit)
+
+
 @app.get("/api/mangadex/search")
 async def search(q: str = Query(..., min_length=1), limit: int = 18) -> list[dict]:
     return await mangadex.search(q, limit=limit)
@@ -200,14 +205,19 @@ def library() -> list[dict]:
                 continue
             tl = storage.read_json(ch / "timeline.json")
             an = storage.read_json(ch / "analysis.json")
-            if tl or an:
-                chapters.append(
-                    {
-                        "chapter_id": ch.name,
-                        "composed": bool(tl),
-                        "sections": len((tl or an)["sections"]),
-                    }
-                )
+            if not (tl or an):
+                continue
+            meta_ch = (tl or an).get("chapter", {})
+            chapters.append(
+                {
+                    "chapter_id": ch.name,
+                    "number": meta_ch.get("number"),
+                    "title": meta_ch.get("title"),
+                    "page_count": meta_ch.get("page_count"),
+                    "composed": bool(tl),
+                    "sections": len((tl or an)["sections"]),
+                }
+            )
         if chapters:
             out.append({"series": meta, "chapters": chapters})
     return out

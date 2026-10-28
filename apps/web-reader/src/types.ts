@@ -7,6 +7,21 @@ export type Manga = {
   original_language?: string;
   tags?: string[];
   cover?: string | null;
+  latest_chapter?: { chapter_id: string; number: string | null; title: string | null; pages: number | null };
+};
+
+export type LibraryChapter = {
+  chapter_id: string;
+  number: string | null;
+  title: string | null;
+  page_count: number | null;
+  composed: boolean;
+  sections: number;
+};
+
+export type LibrarySeries = {
+  series: Manga & { id: string };
+  chapters: LibraryChapter[];
 };
 
 export type Chapter = {

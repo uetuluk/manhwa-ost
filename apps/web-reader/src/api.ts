@@ -1,4 +1,4 @@
-import type { Chapter, Job, Manga, Timeline } from "./types";
+import type { Chapter, Job, LibrarySeries, Manga, Timeline } from "./types";
 
 async function json<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
@@ -11,6 +11,8 @@ async function json<T>(url: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   popular: (limit = 18) => json<Manga[]>(`/api/mangadex/popular?limit=${limit}`),
+  latest: (limit = 24) => json<Manga[]>(`/api/mangadex/latest?limit=${limit}`),
+  library: () => json<LibrarySeries[]>("/api/library"),
   search: (q: string) => json<Manga[]>(`/api/mangadex/search?q=${encodeURIComponent(q)}`),
   manga: (id: string) => json<Manga>(`/api/mangadex/manga/${id}`),
   chapters: (id: string) => json<Chapter[]>(`/api/mangadex/manga/${id}/chapters`),

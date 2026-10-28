@@ -61,8 +61,13 @@ Cue looping uses the window in `timeline.json` (`loop.start`–`loop.end`), so a
   proven (same ABC → same key), but the series score book is not yet persisted:
   each chapter's analysis picks its own arrangements and seeds. A series-level
   score book is the next structural step.
-- **MangaDex coverage** for licensed manhwa is thin (some series expose only a
-  handful of chapters). Other sources need separate clients.
+- **MangaDex removes chapters of licensed series but keeps the catalogue
+  entry**, so a manga list is not proof of readability. Browse therefore probes
+  each candidate with a 1-item chapter feed (`_probe` in `sources/mangadex.py`,
+  3 concurrent, 0.15 s spacing to stay inside 5 req/s, 10 min cache) and drops
+  series with nothing to read. Cold browse ≈ 7–10 s, then cached.
+  `docs` note: search results are *not* probed — a search hit can still open an
+  empty chapter list, and the series page says so explicitly.
 - **One job at a time.** The worker queue is single-threaded because Yue2 owns
   the GPU; a chapter takes 90–240 s depending on cue count and model latency.
 - **`analysis.json` is not human-editable yet.** Re-rolling means `force=true`.
