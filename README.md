@@ -1,75 +1,97 @@
 # manhwa-ost
 
-A manhwa reader whose soundtrack is composed for the page you are on.
+A manhwa reader that composes a soundtrack for the page you are on.
 
-The reader splits a chapter into *sections* (narrative beats), and each section
-plays a cue from the series' own score: same leitmotifs, key and palette across
-every chapter, different arrangement per section. Music is generated locally
-with YuE2 on the R9700, the reading is analysed and scored by DeepSeek V4.1
-Flash over the opencode-go subscription.
+The reader splits a chapter into narrative **sections**, then plays a **cue** for
+each section: the same leitmotifs, key and palette across every chapter, a
+different arrangement per beat. Music is generated locally with **YuE2** on an
+AMD Radeon AI PRO R9700; the pages are read by **DeepSeek V4.1 Flash** over an
+opencode-go subscription.
+
+![Browse](docs/media/browse.jpg)
+
+![Reader with the AI score](docs/media/reader.jpg)
+
+## What makes it work
+
+- **Sections come from the art, not the page count.** A sampled storyboard
+  (≤14 pages) goes to a vision-capable model that returns 3–8 contiguous
+  sections with mood, energy, tension, a leitmotif id and a music brief.
+- **Motifs are real melodies.** The series score book is written in **ABC
+  notation**. Every cue is rendered with `cot=melody|full` + `abc_file` + a
+  fixed seed, so the melody is identical by construction and only the
+  arrangement changes. Measured: three wildly different style prompts, one key
+  (D minor), chroma similarity 0.96–0.98; a no-ABC control landed in F minor.
+- **Cue changes continue the music.** `semantic_prefix_file` lets a new cue
+  start from the exact semantic state the previous one ended in — verified
+  frame-for-frame (50/50 identical).
+- **Instrumental beds.** YuE2's instrumental AR adapter with `cot=full` and
+  empty lyrics.
+
+## Quickstart
+
+Requirements: Linux with ROCm (tested on ROCm 7.1 / gfx1201), Python 3.12 with
+`uv`, Node 20+, `ffmpeg`, an `opencode` CLI with a vision-capable model, and
+YuE2 GGUF weights at `$YUE2_MODEL_ROOT`.
+
+```bash
+# 1. engine source (audio.cpp pinned at 624cf918) + HIP build
+tools/fetch-engine.sh
+tools/build-engine.sh
+
+# 2. python env + API
+uv venv --python 3.12 /srv/manhwa-ost/venv
+uv pip install --python /srv/manhwa-ost/venv/bin/python -r services/composer/requirements.txt numpy scipy soundfile librosa jsonschema
+
+# 3. both services
+tools/dev-up.sh
+```
+
+Open <http://127.0.0.1:5173>, pick a series, open a chapter, press
+**Compose OST** (≈90–240 s for a 20-page chapter), then **Enable OST** and read.
+
+`tools/browser-check.py <manga_id> <chapter_id>` drives headless Chrome through
+the same flow and reports whether a cue actually loaded and switched on scroll.
+
+## How a chapter becomes music
+
+```
+MangaDex → pages → storyboard (≤14 pages @760px)
+        → deepseek-v4.1-flash → analysis.json (3–8 sections, schema-validated)
+        → YuE2 (abc_file + instrumental LoRA) → one cue per (motif, energy)
+        → opus + key/bpm fingerprint + loop window → timeline.json
+        → reader: progress → section → crossfaded cue
+```
+
+Details, file layout and limits: [`docs/pipeline.md`](docs/pipeline.md).
+Spike measurements: [`docs/spikes-2026-10-26.md`](docs/spikes-2026-10-26.md).
 
 ## Status
 
-Phase 0 — feasibility spikes. Nothing here is a working reader yet.
+Working vertical slice, not a product.
 
-| Spike | State |
-| --- | --- |
-| Y1 Yue2 HIP build on gfx1201 | **pass** — RTF 0.50, 6.7 GiB VRAM |
-| Y2 ABC-conditioned motif consistency | **pass** — 3 styles, one key, chroma 0.96–0.98 |
-| Y3 instrumental route (no vocals) | **pass (pending listen)** — LoRA, 46 s cue in 31 s |
-| Y4 semantic-prefix cue continuity | **pass** — 50/50 frames identical |
-| B1 storyboard → cue-sheet JSON | **pass** — 3/3 valid, 52–92 s |
-| R1 source fetch → browser reader | **pass** — MangaDex → reader → composed chapter |
+- ✅ end-to-end: source → reader → composed chapter, verified in a browser
+- ✅ consistent key/motif across arrangements
+- ✅ cue continuity via semantic prefix
+- ⏳ series score book (so chapter 155 reuses chapter 154's arrangements)
+- ⏳ beat-aligned loops / tempo lock (BPM detection is currently ambiguous)
+- ⏳ more sources — MangaDex coverage for licensed manhwa is thin
+- ⏳ Mihon fork on Android (the reader here is a browser stand-in; Mihon has no
+  web target, so the timeline/audio module will be ported to Kotlin/Media3)
 
-Measurements: [`docs/spikes-2026-10-26.md`](docs/spikes-2026-10-26.md).
-
-## Shape
+## Layout
 
 ```
-apps/web-reader/     browser reader (spike): sources, continuous scroll, cue engine
-apps/reader/         Mihon fork (later, needs Android tooling)
-services/composer/   analysis, score book, render queue, asset server
-contracts/           JSON Schema, generated types
-docs/                decisions, contracts, runbooks
-tools/               bootstrap, engine build, benchmarks
+apps/web-reader/     React + TypeScript reader, Web Audio cue engine
+services/composer/   FastAPI: sources, brain, render queue, asset server
+contracts/           JSON Schema + the ABC score book
+tools/               engine build, benchmarks, browser check, dev-up
+docs/                pipeline, decisions, spike measurements
 ```
 
-Heavy artefacts (engine sources, builds, audio library) live on `/srv/manhwa-ost`,
-not in the repo. See `tools/env.sh`.
+## Licenses and content
 
-## Run it
-
-```bash
-tools/run-composer.sh                 # API on 127.0.0.1:8765
-npm --prefix apps/web-reader run dev  # reader on 127.0.0.1:5173
-```
-
-Open <http://127.0.0.1:5173>, pick MangaDex, open a series, open a chapter, press
-**Compose OST** (≈90 s for a 20-page chapter: ~60 s reading the pages, ~30 s
-composing five cues). Then press **Enable OST** and scroll; cues change at the
-AI's section boundaries.
-
-Deep links: `#/m/<mangaId>` for a series, `#/c/<mangaId>/<chapterId>` for a
-chapter. `tools/dev-up.sh` starts both services idempotently.
-
-Pipeline detail and current limits: [`docs/pipeline.md`](docs/pipeline.md).
-
-## Engine
-
-YuE2 through [audio.cpp](https://github.com/0xShug0/audio.cpp), pinned at
-`624cf918e51263d39c2a0d28a6c5e3d55990b79f`, built for HIP gfx1201 in its own
-build directory. The drama3 build in `create-image-video-music` is not touched.
-
-```bash
-tools/build-engine.sh          # configure + build audiocpp_cli / audiocpp_server
-tools/build-engine.sh --check  # report existing binary + backend
-```
-
-## Why the music stays consistent
-
-1. The series score book is written as **ABC notation** — motifs are real
-   melodies, not prompt adjectives.
-2. Every cue is rendered with `cot=melody|full` + `abc_file` + a fixed seed, so
-   the melody is the same by construction and only the arrangement changes.
-3. Section transitions reuse `semantic_prefix_file` from the previous cue.
-4. Post-processing locks key/BPM to the score book and normalises loudness.
+Code is MIT (see `LICENSE`). YuE2 weights and the audio.cpp engine are
+downloaded separately under their own terms; the instrumental adapter is
+CC BY-NC 4.0, so audio made with it is non-commercial. No manga pages, model
+weights or generated audio are committed here.
